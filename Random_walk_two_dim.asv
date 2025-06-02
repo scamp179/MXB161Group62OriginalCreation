@@ -6,7 +6,7 @@ function [delta_x,delta_y] = Random_walk_two_dim(position, x, y, weighting_x, we
     Y = length(position(:,1));
     X = length(position(1,:));
     if movement_type < 0 - movement_type_weighting
-        [delta_x,delta_y] = rand_walk_diag(x,y,weighting_x,weighting_y,X,Y);
+        [delta_x,delta_y] = rand_walk_diag(x,y,weighting_x,weighting_y);
     elseif movement_type > 0 - movement_type_weighting %  movement_type > 0 - movement_type_weighting moves in straight lines
         [delta_x,delta_y] = rand_walk_straight(x,y,weighting_x,weighting_y,X,Y);
     else % No movement
@@ -29,10 +29,10 @@ function [delta_x,delta_y] = rand_walk_straight(x, y, weighting_x, weighting_y, 
             % if weighted in - x direction then more likely to step in - x direction
             if x == X % Boundary Condition Cut-off
                 delta_x = 0;
-                delta_y = 0; 
+    %            delta_y = 0; 
             else
                 delta_x = 1;
-                delta_y = 0;
+    %            delta_y = 0;
             end
     
         elseif x_step < 0 - weighting_x % step left
