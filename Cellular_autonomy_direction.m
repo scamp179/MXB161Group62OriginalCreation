@@ -6,6 +6,7 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_status] = 
 % movement_type_weighting is positive if tasmanian devil is moving in a
 % straight line (up,down,left,right)
 
+    B = A > 1;
     Y = 3;
     X = 3;
 
@@ -18,7 +19,10 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_status] = 
     % Count how many live neighbours each cell has in its Moore neighbourhood
     live_neighbours = A(north, :) + A(south, :) + A(:, east) + A(:, west) ...
                     + A(north, east) + A(north, west) + A(south, east) + A(south, west);
-    
+
+    infected_neighbours = B(north, :) + B(south, :) + B(:, east) + B(:, west) ...
+                    + B(north, east) + B(north, west) + B(south, east) + B(south, west);
+                    
     %Make Movement Rules:
 
     Movement_rule_up ;        % a cell lives if it has 3 live neighbours
