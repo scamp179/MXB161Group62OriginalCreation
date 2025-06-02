@@ -7,6 +7,11 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_status] = 
 % straight line (up,down,left,right)
 
     B = A > 1;
+    if A >= 1
+        A = 1;
+    else
+        A = 0;
+    end
     Y = 3;
     X = 3;
 
@@ -22,18 +27,13 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_status] = 
 
     infected_neighbours = B(north, :) + B(south, :) + B(:, east) + B(:, west) ...
                     + B(north, east) + B(north, west) + B(south, east) + B(south, west);
+
+    if mating_season == true
+        var = 1;
+    else
+        var = -1;
+    end
                     
-    %Make Movement Rules:
-
-    Movement_rule_up ;        % a cell lives if it has 3 live neighbours
-    Movement_rule_down ;    % a cell lives if it's alive already, and has 2 live neighbours
-    Movement_rule_left;
-    Movement_rule_right;
-
-    Movement_rule_up_left ; 
-    Movement_rule_up_right ;% a cell lives if it has 3 live neighbours
-    Movement_rule_down_left ;    % a cell lives if it's alive already, and has 2 live neighbours
-    Movement_rule_down_right ; 
 
     %Make infection Rules:
     Infection_rule_1; % surrounded by 1 infected 
@@ -96,4 +96,23 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_status] = 
     end
     
     
+end
+
+%-------------------------------------------------------------------------
+
+function [weighting_x, weighting_y, movement_type_weighting,Infection_status] = apply_movement_rules(A,mating_season)
+    
+%Make Movement Rules:
+
+    Movement_rule_up = [0,1,0;0,1,0;0,0,0] ;        % a cell lives if it has 3 live neighbours
+    Movement_rule_down = [0,0,0;0,1,0;0,1,0];    % a cell lives if it's alive already, and has 2 live neighbours
+    Movement_rule_left = [0,0,0;1,1,0;0,0,0];
+    Movement_rule_right = [0,0,0;0,1,1;0,0,0];
+
+    Movement_rule_up_left = [1,0,0;0,1,0;0,0,0]; 
+    Movement_rule_up_right = [0,0,1;0,1,0;0,0,0];% a cell lives if it has 3 live neighbours
+    Movement_rule_down_left = [0,0,0;0,1,0;1,0,0];    % a cell lives if it's alive already, and has 2 live neighbours
+    Movement_rule_down_right = [0,0,0;0,1,0;0,0,1]; 
+
+
 end
