@@ -1,4 +1,4 @@
-function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting] = Cellular_autonomy_direction(A,mating_season)
+function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,Cub] = Cellular_autonomy_direction(A,mating_season)
 % Cellular_autonomy_direction determines direction and infection based movement weightings for an individual cell based on its 3x3 neighbourhood. 
 %   
 % INPUT:
@@ -46,7 +46,7 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting]
     west  = [X 1:X-1];     % indices of west neighbour
 
 
-    % Count how many infected neighbours each cell has in its Moore neighbourhood
+    % Count how many infected neighbours each cell has in its neighbourhood
     infected_neighbours = B(north, :) + B(south, :) + B(:, east) + B(:, west) ...
                     + B(north, east) + B(north, west) + B(south, east) + B(south, west);
 
@@ -62,13 +62,25 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting]
     Infection_rule_7 = sum(sum(infected_neighbours)) == 7; % surrounded by 7 infected 
     Infection_rule_8 = sum(sum(infected_neighbours)) == 8; % surrounded by 8 infected 
 
+   % Count how many regular neighbours each cell has in its neighbourhood
+    breeding_neighbours = C(north, :) + C(south, :) + C(:, east) + C(:, west) ...
+                    + C(north, east) + C(north, west) + C(south, east) + C(south, west);
+    % Breeding rules
+    Breeding_rule = sum(sum(breeding_neighbours)) >= 1;
+    
     % sets variable based on mating season
     % If it is mating season, var = 1 (cells come together)
     % If it is not mating season, var = -1 (cells avoid each other)
-    if mating_season == true
+    if mating_season == 1
         var = 1;
+        if Breeding_rule
+            Cub = A(2,2);
+        else 
+            Cub = 0;
+        end
     else
         var = -1;
+        Cub = 0;
     end
 
     % count number of neighbours in all cardinal directions
