@@ -1,13 +1,22 @@
 function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting] = Cellular_autonomy_direction(A,mating_season)
-%UNTITLED5 Summary of this function goes here
-%   Detailed explanation goes here
-% weighting_x is positive if going right (cols increasing)
-% weighting_y is positive if going up (rows decreasing)
-% movement_type_weighting is positive if tasmanian devil is moving in a
-% straight line (up,down,left,right)
+% Cellular_autonomy_direction determines direction and infection based movement weightings for an individual cell based on its 3x3 neighbourhood. 
+%   
+% INPUT:
+%     A - 3x3 matrix surrounding a cell
+%     mating_season = Boolean: True if in mating season, False if not
+%
+% OUTPUT:
+%     weighting_x is positive if going right (cols increasing)
+%     weighting_y is positive if going up (rows decreasing)
+%     movement_type_weighting is positive if tasmanian devil is moving in a
+%     straight line (up,down,left,right)
+%     infection_weighting is infection pressure based on infected neighbours
+
+    % Sets B, C and F to be empty 3x3 matrices
     B = zeros(3,3);
     C = zeros(3,3);
     F = zeros(3,3);
+    % Populates B, C and F based on different conditions applied to A
     for i = 1 : 3
         for j = 1 : 3
             if A(i,j) > 1
@@ -30,7 +39,7 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting]
     end
     Y = 3;
     X = 3;
-
+    % Define neighbouring indices for cardinal directions
     north = [Y 1:Y-1];     % indices of north neighbour
     east  = [2:X 1];       % indices of east neighbour
     south = [2:Y 1];       % indices of south neighbour
@@ -42,7 +51,7 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting]
                     + B(north, east) + B(north, west) + B(south, east) + B(south, west);
 
 
-    %Make infection Rules:
+    % Define infection Rules based on total number of infected neighbours:
     Infection_rule_0 = sum(sum(infected_neighbours)) == 0; % surrounded by 0 infected 
     Infection_rule_1 = sum(sum(infected_neighbours)) == 1; % surrounded by 1 infected 
     Infection_rule_2 = sum(sum(infected_neighbours)) == 2; % surrounded by 2 infected 
@@ -53,21 +62,29 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting]
     Infection_rule_7 = sum(sum(infected_neighbours)) == 7; % surrounded by 7 infected 
     Infection_rule_8 = sum(sum(infected_neighbours)) == 8; % surrounded by 8 infected 
 
+    % sets variable based on mating season
+    % If it is mating season, var = 1 (cells come together)
+    % If it is not mating season, var = -1 (cells avoid each other)
     if mating_season == true
         var = 1;
     else
         var = -1;
     end
 
+    % count number of neighbours in all cardinal directions
     north_num_neigh = sum(C(1,:));
     south_num_neigh = sum(C(3,:)); 
     east_num_neigh = sum(C(:,3));
     west_num_neigh = sum(C(:,1));
     
-
+    % Set directional weighting based on variable (up is +ve y, right is +ve x)
     weighting_y = var*((north_num_neigh - south_num_neigh)*0.3);
     weighting_x = var*((east_num_neigh - west_num_neigh)*0.3);
-    
+
+    % Determines movement type weighting
+    % Straight movement is preferred: one direction non zero
+    % No movement: both zero
+    % Diagonal movement: both non zero
     if weighting_y == 0 || weighting_x == 0
         movement_type_weighting = 0.5;
     elseif  weighting_y == 0 && weighting_x == 0
@@ -75,10 +92,13 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting]
     else 
         movement_type_weighting = -0.5;
     end
-    
+
+    % Determine infection weighting
+    % If the centre cell is already infected, weighting = 0
     if A(2,2) >= 2
         Infection_weighting = 0;
     else
+        % identify how many infected neighbours are present using previous rules
         if Infection_rule_8
             Infection_status = 8;
         elseif Infection_rule_7
