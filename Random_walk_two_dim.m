@@ -1,10 +1,19 @@
 function [delta_x,delta_y] = Random_walk_two_dim(position, x, y, weighting_x, weighting_y, movement_type_weighting)
-%UNTITLED8 Summary of this function goes here
-%   Detailed explanation goes here
+%Random_walk_two_dim determines the movement of the Tasmanian devils 
+%   input: 
+    %position - the current state of the grid 
+    %x, y - current position of the td 
+    %weighting_x, weighting_y - directional bias 
+    %movement_type_weighing - probability split between diagonal and straight 
+%output:
+    %delta_x, delta_y - change in the x and y positions 
+    
     movement_type = 2*rand(1)-1; % [0 to -1] is diagonal, [1 to 0] is straight (up,down,left,right)
 
-    Y = length(position(:,1));
-    X = length(position(1,:));
+    Y = length(position(:,1)); % no. of rows 
+    X = length(position(1,:)); % no. of columns
+
+% Decides the movement type; either diagonal, straight or none. 
     if movement_type < 0 - movement_type_weighting
         [delta_x,delta_y] = rand_walk_diag(x,y,weighting_x,weighting_y,X,Y);
     elseif movement_type > 0 - movement_type_weighting %  movement_type > 0 - movement_type_weighting moves in straight lines
@@ -19,10 +28,13 @@ end
 % -------------------------------------------------------------------------
 
 function [delta_x,delta_y] = rand_walk_straight(x, y, weighting_x, weighting_y, X, Y)
+%determines the straight movements (up/down/left/right)
 
+%steps along the x and y axis 
     x_step = 2*rand(1)-1;
     y_step = 2*rand(1)-1;
 
+%biasing the movement towards the direction of a higher weighting 
     if abs(weighting_x*x_step) > abs(weighting_y*y_step)
         if x_step > 0 - weighting_x % step right
             % if weighted in + x direction then more likely to step in + x direction
@@ -79,6 +91,7 @@ end
 % -------------------------------------------------------------------------
 
 function [delta_x,delta_y] = rand_walk_diag(x, y, weighting_x, weighting_y, X, Y)
+% Determining the diagonal movement
     x_step = 2*rand(1)-1;
     y_step = 2*rand(1)-1;
 
@@ -107,6 +120,7 @@ end
 % -------------------------------------------------------------------------
 
 function [delta_x,delta_y] = Boundary_Conditions_diag(x,y,bound_x, bound_y, dx, dy)
+% ensuring the diagonal movement stays within the boundary conditions
  
      if y == bound_y && x ~= bound_x % Boundary Condition Cut-off
          delta_x = dx;
