@@ -68,8 +68,8 @@ function [positions,pop_change_percentage] = Tasmianian_Devil_sim(N, init_pos)
                         for r = 1 : R
                             for c = 1 : C
                                 if B(r,c) == 0
-                                    row = I + y(r);
-                                    col = J + x(c);
+                                    row = y(r);
+                                    col = x(c);
                                     positions(row, col , dt) = update_infection_status(Cub,infect_weight);
 
                                 end
