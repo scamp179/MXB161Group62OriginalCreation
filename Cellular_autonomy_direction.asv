@@ -12,9 +12,7 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
 %     movement_type_weighting is positive if tasmanian devil is moving in a
 %     straight line (up,down,left,right)
 %     infection_weighting is infection pressure based on infected neighbours
-%     Cub_stat is the indication if cell can breed
-%     Breeding_weighting is the percentage of producing a new cell
-%     future_neighboursless_step is an array of possible movements
+%     Cub_stat
 
     % Sets B, C and F to be empty 3x3 matrices
     B = zeros(3,3);
