@@ -172,7 +172,7 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
         elseif Infection_rule_1
             Infection_status = 1;
         else 
-            Infection_status = rand>0.99; % 1% chance to get infection status
+            Infection_status = rand>0.95; % 5% chance to get infection status
         end
         Infection_weighting = Infection_status* 0.12;
     end
@@ -183,7 +183,7 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
                 %mod(num_breeding_neighbours,8) ~= 0 % 8 is max number of neighbours
                 %Breeding_weighting = round(mod(num_breeding_neighbours,8),2)/2;
             if (num_breeding_neighbours == 2)
-                Breeding_weighting = 0.2;
+                Breeding_weighting = 0.05;
             %elseif num_breeding_neighbours == 4
                 %Breeding_weighting = 0.32;
             %elseif num_breeding_neighbours == 8
