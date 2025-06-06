@@ -97,10 +97,6 @@ function [updated_infect_status] = update_infection_status(infect_status,infect_
 %   iteration.
 
     probability_infection = abs(randn(1));
-    if round(probability_infection,0) > 1 
-        probability_infection = probability_infection - round(probability_infection,0);
-    end
-
     if  infect_status == 1 && infect_weight ~= 0
         if infect_status == 1 && probability_infection < infect_weight
             updated_infect_status = 2;  
@@ -126,22 +122,16 @@ function [Newborn_Status] = breeding_outcome(Cub_status,Cub_weighting,infect_wei
 %   to that Tasmanian Devil's infection status at the next time iteration.
 
     probability_infection = abs(randn(1));
-    if round(probability_infection,0) > 1 
-        probability_infection = probability_infection - round(probability_infection,0);
-    end
-    
     conception_probability = abs(randn(1));
-    if round(conception_probability,0) > 1 
-        conception_probability = conception_probability - round(conception_probability,0);
-    end
 
     if  Cub_status >= 1 && Cub_weighting ~= 0
-        if conception_probability > Cub_weighting % Baby not born
+        if conception_probability > Cub_weighting
             Newborn_Status = 0;
-        elseif Cub_status == 2 && conception_probability <= Cub_weighting && probability_infection <= infect_weight % Baby born infected
-            Newborn_Status = 2; 
-        elseif Cub_status == 1 && conception_probability <= Cub_weighting % Baby born without infection
+            Cub_status == 2 && conception_probability <= Cub_weighting && probability_infection <= infect_weight
+            Newborn_Status = 2;  
+        elseif Cub_status == 1 && conception_probability <= Cub_weighting
             Newborn_Status = 1;
+        elseif 
         else
             Newborn_Status = 1;
         end

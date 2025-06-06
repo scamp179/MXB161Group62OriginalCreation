@@ -67,7 +67,7 @@ function [delta_x,delta_y] = rand_walk_straight(x, y, weighting_x, weighting_y, 
                 delta_y = 0; 
             else
                 delta_x = 0;
-                delta_y = -1;
+                delta_y = 1;
             end
     
         elseif y_step < 0 - weighting_y % step down
@@ -78,7 +78,7 @@ function [delta_x,delta_y] = rand_walk_straight(x, y, weighting_x, weighting_y, 
                 delta_y = 0; 
             else
                 delta_x = 0;
-                delta_y = 1;
+                delta_y = -1;
             end
     
         end
@@ -122,8 +122,8 @@ end
 function [delta_x,delta_y] = Boundary_Conditions_diag(x,y,bound_x, bound_y, dx, dy)
 % ensuring the diagonal movement stays within the boundary conditions
  if bound_x ~= 1 && x == bound_x
-     b = 1;
- elseif bound_y ~= 1 && y == bound_y
+b = 1;
+ elseif bound_y ~= 1 && x == bound_y
      a = 1;
  end
 
