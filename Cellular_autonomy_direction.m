@@ -172,7 +172,7 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
         elseif Infection_rule_1
             Infection_status = 1;
         else 
-            Infection_status = rand>0.99;
+            Infection_status = rand>0.99; % 1% chance to get infection status
         end
         Infection_weighting = Infection_status* 0.12;
     end
