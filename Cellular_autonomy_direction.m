@@ -1,4 +1,4 @@
-function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,Cub_stat,Breeding_weighting] = Cellular_autonomy_direction(A,mating_season)
+function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,Cub_stat,Breeding_weighting,future_neighboursless_step] = Cellular_autonomy_direction(A,A2,mating_season)
 % Cellular_autonomy_direction determines direction and infection based movement weightings for an individual cell based on its 3x3 neighbourhood. 
 %   
 % INPUT:
@@ -15,7 +15,7 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
     % Sets B, C and F to be empty 3x3 matrices
     B = zeros(3,3);
     C = zeros(3,3);
-    F = zeros(3,3);
+    B2 = zeros(3,3);
     % Populates B, C and F based on different conditions applied to A
     for i = 1 : 3
         for j = 1 : 3
@@ -30,10 +30,10 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
                 C(i,j) = 0;
             end
         
-            if A(i,j) < 0
-                F(i,j) = 1;
+            if A2(i,j) < 0
+                B2(i,j) = 1;
             else
-                F(i,j) = 0;
+                B2(i,j) = 0;
             end
         end
     end
@@ -67,7 +67,56 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
     % Breeding rules
     num_breeding_neighbours = sum(sum(breeding_neighbours == 1));
     Breeding_rule = ((num_breeding_neighbours >= 1) && (mating_season == 1));
-    
+
+    % Future neighbours
+    straight_dir = [north;south;east;west];
+    upupdowndown = [north;north;south;south;];
+    leftrightleftright = [west;east;west;east];
+
+    future_neighboursless_step = zeros(8,2);
+    for i = 1 : 8
+        if i == 1 || i == 3 || i == 5 || i == 7
+            if B2(straight_dir(i), :) == 0
+                if isequal(straight_dir(i),north)
+                    dx = 0; 
+                    dy = -1;
+                elseif isequal(straight_dir(i),east)
+                    dx = 1;
+                    dy = 0;
+                elseif isequal(straight_dir(i),south)
+                    dx = 0; 
+                    dy = 1;
+                else
+                    dx = -1;
+                    dy = 0;
+                end
+                future_neighboursless_step(i,:) = [dy,dx];
+            else
+                future_neighboursless_step(i,:) = [0,0];
+            end
+        elseif i == 2 || i == 4 || i == 6 || i == 8
+            if B2(upupdowndown(i), leftrightleftright(i)) == 0
+                if isequal(upupdowndown(i),north)
+                    dy = -1; 
+                else
+                    dy = 1;
+                end
+                if isequal(leftrightleftright(i),west)
+                    dx = -1; 
+                else
+                    dx = 1;
+                end
+                future_neighboursless_step(i,:) = [dy,dx];
+            else
+                future_neighboursless_step(i,:) = [0,0];
+            end
+        else
+            message = ('fuckin error');
+            disp(message);
+            return
+        end
+    end
+
     % sets variable based on mating season
     % If it is mating season, var = 1 (cells come together)
     % If it is not mating season, var = -1 (cells avoid each other)
@@ -103,7 +152,6 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
     % If the centre cell is already infected, weighting = 0
     if A(2,2) >= 2
         Infection_weighting = 0;
-        Infection_status = 0;
     else
         % identify how many infected neighbours are present using previous rules
         if Infection_rule_8
@@ -129,19 +177,15 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
     end
     
         if Breeding_rule
-            if Infection_status > 0
-                Cub_stat = 2;
-            else
                 Cub_stat = 1;
-            end
             if mod(num_breeding_neighbours,8) ~= 0 % 8 is max number of neighbours
-                Breeding_weighting = round(mod(num_breeding_neighbours,8),2);
+                Breeding_weighting = round(mod(num_breeding_neighbours,8),2)/2;
             elseif (num_breeding_neighbours == 1) || (num_breeding_neighbours == 2)
-                Breeding_weighting = 0.8;
+                Breeding_weighting = 0.4;
             elseif num_breeding_neighbours == 4
-                Breeding_weighting = 0.65;
+                Breeding_weighting = 0.32;
             elseif num_breeding_neighbours == 8
-                Breeding_weighting = 0.12;
+                Breeding_weighting = 0.1;
             end
         else
             Breeding_weighting = 0 ;

@@ -6,6 +6,7 @@ function [positions,population,infect_percentage] = Tasmianian_Devil_sim(N, init
     
 %   Initialise variables
     Simulation_vid = VideoWriter('Simulation_vid');
+    Simulation_vid.FrameRate = 10;
     open(Simulation_vid);
 
     K = length(init_pos(:,1));
@@ -35,22 +36,34 @@ function [positions,population,infect_percentage] = Tasmianian_Devil_sim(N, init
 %               Check Boundary Conditions for input into cellular autonoma                
                 if positions(i,j,dt-1) ~= 0
                     A = Boundary_Conditions(positions,i,j,K,M,dt-1);
+                    A2 = Boundary_Conditions(positions,i,j,K,M,dt);
 %                   Use cellular autonoma to determine weightings for
 %                   random walk.
-                    [weighting_x, weighting_y, movement_type_weighting,infect_weight,cub_status,breeding_weighting] = Cellular_autonomy_direction(A,mating_season);
+                    [weighting_x, weighting_y, movement_type_weighting,infect_weight,cub_status,breeding_weighting,backup_step] = Cellular_autonomy_direction(A,A2,mating_season);
 %                   Perform Random  Walk for single Tasmanian Devil.                    
                     [dx,dy] = Random_walk_two_dim(positions(:, :, dt-1), j, i, weighting_x, weighting_y, movement_type_weighting);
 
 %                   Cannot move to cell if already occupied
-                    if positions(i + dy, j + dx, dt) == 1
-                        dx = 0;
-                        dy = 0;
+                    if positions(i + dy, j + dx, dt) >= 1 
+                        for f = 1 : 8
+                            if ~isequal(backup_step(f,:),[0,0])
+                                if (i + dy) <= K || (i + dy) >= 1
+                                dy = backup_step(f,1);
+                                end
+                                if (j + dx) <= M || (j + dx) >= 1
+                                dx = backup_step(f,2);
+                                end
+                            end
+                        end
+                       positions(i + dy, j + dx, dt) = update_infection_status(infect_status(i,j),infect_weight);
+                    else
+                        positions(i + dy, j + dx, dt) = update_infection_status(infect_status(i,j),infect_weight);
                     end
 %                   Update position and infection status of Tasmainian 
 %                   Devil for not time iteration.
-                    positions(i + dy, j + dx, dt) = update_infection_status(infect_status(i,j),infect_weight);
+                    %positions(i + dy, j + dx, dt) = update_infection_status(infect_status(i,j),infect_weight);
                     
-                    if cub_status > 0  
+                    if cub_status == 1  
                         I = i + dy;
                         J = j + dx;
                         [B,y,x] = Boundary_Conditions(positions,I,J,K,M,dt);
@@ -61,7 +74,7 @@ function [positions,population,infect_percentage] = Tasmianian_Devil_sim(N, init
                                 if B(r,c) == 0
                                     row = y(r);
                                     col = x(c);
-                                    positions(row, col , dt) = breeding_outcome(cub_status,breeding_weighting,infect_weight);
+                                    positions(row, col , dt) = breeding_outcome(cub_status,breeding_weighting);
                                 end
                             end
                         end
@@ -120,7 +133,7 @@ end
 
 % -------------------------------------------------------------------------
 
-function [Newborn_Status] = breeding_outcome(Cub_status,Cub_weighting,infect_weight)
+function [Newborn_Status] = breeding_outcome(Cub_status,Cub_weighting)
 %   The breeding_outcome function takes the current infection status of a
 %   Tasmanian Devil and the infection weighting and determines what happens
 %   to that Tasmanian Devil's infection status at the next time iteration.
@@ -135,14 +148,10 @@ function [Newborn_Status] = breeding_outcome(Cub_status,Cub_weighting,infect_wei
         conception_probability = conception_probability - round(conception_probability,0);
     end
 
-    if  Cub_status >= 1 && Cub_weighting ~= 0
+    if  Cub_status == 1 && Cub_weighting ~= 0
         if conception_probability > Cub_weighting % Baby not born
             Newborn_Status = 0;
-        elseif Cub_status == 2 && conception_probability <= Cub_weighting && probability_infection <= infect_weight % Baby born infected
-            Newborn_Status = 2; 
         elseif Cub_status == 1 && conception_probability <= Cub_weighting % Baby born without infection
-            Newborn_Status = 1;
-        else
             Newborn_Status = 1;
         end
     else
