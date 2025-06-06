@@ -168,37 +168,37 @@ function [A,I,J] = Boundary_Conditions(positions,i,j,K,M,dt)
 %   the simulation conditions.
 
     A = zeros(3,3);
-    if i == 1 && j == 1
-        I = i:i+1;
-        J = j:j+1;
+    if i <= 1 && j <= 1
+        I = 1:2;
+        J = 1:2;
         A(2:3,2:3) = positions(I, J, dt);  
-    elseif i == 1 && j == M
-        I = i:i+1;
-        J = j-1:j;
+    elseif i <= 1 && j >= M
+        I = 1:2;
+        J = M-1:M;
         A(2:3,1:2) = positions(I, J, dt);
-    elseif i == K && j == 1
-        I = i-1:i;
-        J = j:j+1;        
+    elseif i >= K && j <= 1
+        I = K-1:K;
+        J = 1:2;        
         A(1:2,2:3) = positions(I, J, dt);
-    elseif i == 1
-        I = i:i+1;
+    elseif i <= 1
+        I = 1:2;
         J = j-1:j+1;
         A(2:3,:) = positions(I, J, dt); 
-    elseif j == 1 
+    elseif j <= 1 
         I = i-1:i+1;
-        J = j:j+1;
+        J = 1:2;
         A(:,2:3) = positions(I, J, dt);
-   elseif i == K && j == M
-        I = i-1:i;
-        J = j-1:j;
+   elseif i >= K && j >= M
+        I = K-1:K;
+        J = M-1:M;
        A(1:2,1:2) = positions(I, J, dt);
-    elseif i == K
-        I = i-1:i;
+    elseif i >= K
+        I = K-1:K;
         J = j-1:j+1;  
         A(1:2,:) = positions(I, J, dt); 
-    elseif j == M 
+    elseif j >= M 
         I = i-1:i+1;
-        J = j-1:j;
+        J = M-1:M;
         A(:,1:2) = positions(I, J, dt);
     else 
         I = i-1:i+1;
