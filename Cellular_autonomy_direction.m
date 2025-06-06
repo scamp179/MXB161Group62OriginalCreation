@@ -2,7 +2,8 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
 % Cellular_autonomy_direction determines direction and infection based movement weightings for an individual cell based on its 3x3 neighbourhood. 
 %   
 % INPUT:
-%     A - 3x3 matrix surrounding a cell
+%     A - 3x3 matrix surrounding a cell of previous iteration
+%     A2 - 3x3 matrix surrounding a cell of current iteration
 %     mating_season = Boolean: True if in mating season, False if not
 %
 % OUTPUT:
