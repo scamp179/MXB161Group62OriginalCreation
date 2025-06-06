@@ -2,7 +2,8 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
 % Cellular_autonomy_direction determines direction and infection based movement weightings for an individual cell based on its 3x3 neighbourhood. 
 %   
 % INPUT:
-%     A - 3x3 matrix surrounding a cell
+%     A - 3x3 matrix surrounding a cell of previous iteration
+%     A2 - 3x3 matrix surrounding a cell of current iteration
 %     mating_season = Boolean: True if in mating season, False if not
 %
 % OUTPUT:
@@ -69,14 +70,11 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
     Breeding_rule = ((num_breeding_neighbours >= 1) && (mating_season == 1));
 
     % Future neighbours
-    future_neighbours = B2(north, :) + B2(south, :) + B2(:, east) + B2(:, west) ...
-                    + B2(north, east) + B2(north, west) + B2(south, east) + B2(south, west);
-
     straight_dir = [north;south;east;west];
     upupdowndown = [north;north;south;south;];
     leftrightleftright = [west;east;west;east];
 
-    future_neighboursless_step = zeros(4,2);
+    future_neighboursless_step = zeros(8,2);
     for i = 1 : 8
         if i == 1 || i == 3 || i == 5 || i == 7
             if B2(straight_dir(i), :) == 0
@@ -93,22 +91,26 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
                     dx = -1;
                     dy = 0;
                 end
+                future_neighboursless_step(i,:) = [dy,dx];
             else
+                future_neighboursless_step(i,:) = [0,0];
             end
-            future_neighboursless_step(i,:) = [dy,dx];
         elseif i == 2 || i == 4 || i == 6 || i == 8
-            B2(upupdowndown(i), leftrightleftright(i)) == 0
-            if isequal(upupdowndown(i),north)
-                dy = -1; 
+            if B2(upupdowndown(i), leftrightleftright(i)) == 0
+                if isequal(upupdowndown(i),north)
+                    dy = -1; 
+                else
+                    dy = 1;
+                end
+                if isequal(leftrightleftright(i),west)
+                    dx = -1; 
+                else
+                    dx = 1;
+                end
+                future_neighboursless_step(i,:) = [dy,dx];
             else
-                dy = 1;
+                future_neighboursless_step(i,:) = [0,0];
             end
-            if isequal(leftrightleftright(i),west)
-                dx = -1; 
-            else
-                dx = 1;
-            end
-            future_neighboursless_step(i,:) = [dy,dx];
         else
             message = ('fuckin error');
             disp(message);
@@ -170,21 +172,24 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
         elseif Infection_rule_1
             Infection_status = 1;
         else 
-            Infection_status = 0;
+            Infection_status = rand(0;
         end
         Infection_weighting = Infection_status* 0.12;
     end
     
         if Breeding_rule
                 Cub_stat = 1;
-            if mod(num_breeding_neighbours,8) ~= 0 % 8 is max number of neighbours
-                Breeding_weighting = round(mod(num_breeding_neighbours,8),2)/2;
-            elseif (num_breeding_neighbours == 1) || (num_breeding_neighbours == 2)
-                Breeding_weighting = 0.4;
-            elseif num_breeding_neighbours == 4
-                Breeding_weighting = 0.32;
-            elseif num_breeding_neighbours == 8
-                Breeding_weighting = 0.1;
+            % if num_breeding_neighbours
+                %mod(num_breeding_neighbours,8) ~= 0 % 8 is max number of neighbours
+                %Breeding_weighting = round(mod(num_breeding_neighbours,8),2)/2;
+            if (num_breeding_neighbours == 2)
+                Breeding_weighting = 0.2;
+            %elseif num_breeding_neighbours == 4
+                %Breeding_weighting = 0.32;
+            %elseif num_breeding_neighbours == 8
+                %Breeding_weighting = 0.1;
+            else
+                Breeding_weighting = 0;
             end
         else
             Breeding_weighting = 0 ;
