@@ -1,8 +1,9 @@
-function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,Cub] = Cellular_autonomy_direction(A,mating_season)
+function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,Cub_stat,Breeding_weighting,future_neighboursless_step] = Cellular_autonomy_direction(A,A2,mating_season)
 % Cellular_autonomy_direction determines direction and infection based movement weightings for an individual cell based on its 3x3 neighbourhood. 
 %   
 % INPUT:
-%     A - 3x3 matrix surrounding a cell
+%     A - 3x3 matrix surrounding a cell of previous iteration
+%     A2 - 3x3 matrix surrounding a cell of current iteration
 %     mating_season = Boolean: True if in mating season, False if not
 %
 % OUTPUT:
@@ -15,7 +16,7 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
     % Sets B, C and F to be empty 3x3 matrices
     B = zeros(3,3);
     C = zeros(3,3);
-    F = zeros(3,3);
+    B2 = zeros(3,3);
     % Populates B, C and F based on different conditions applied to A
     for i = 1 : 3
         for j = 1 : 3
@@ -30,10 +31,10 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
                 C(i,j) = 0;
             end
         
-            if A(i,j) < 0
-                F(i,j) = 1;
+            if A2(i,j) < 0
+                B2(i,j) = 1;
             else
-                F(i,j) = 0;
+                B2(i,j) = 0;
             end
         end
     end
@@ -50,37 +51,80 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
     infected_neighbours = B(north, :) + B(south, :) + B(:, east) + B(:, west) ...
                     + B(north, east) + B(north, west) + B(south, east) + B(south, west);
 
-
+    num_infected_neighbours= sum(sum(infected_neighbours== 0 ));
     % Define infection Rules based on total number of infected neighbours:
-    Infection_rule_0 = sum(sum(infected_neighbours)) == 0; % surrounded by 0 infected 
-    Infection_rule_1 = sum(sum(infected_neighbours)) == 1; % surrounded by 1 infected 
-    Infection_rule_2 = sum(sum(infected_neighbours)) == 2; % surrounded by 2 infected 
-    Infection_rule_3 = sum(sum(infected_neighbours)) == 3; % surrounded by 3 infected 
-    Infection_rule_4 = sum(sum(infected_neighbours)) == 4; % surrounded by 4 infected 
-    Infection_rule_5 = sum(sum(infected_neighbours)) == 5; % surrounded by 5 infected 
-    Infection_rule_6 = sum(sum(infected_neighbours)) == 6; % surrounded by 6 infected 
-    Infection_rule_7 = sum(sum(infected_neighbours)) == 7; % surrounded by 7 infected 
-    Infection_rule_8 = sum(sum(infected_neighbours)) == 8; % surrounded by 8 infected 
+    Infection_rule_1 = sum(sum(num_infected_neighbours)) == 1; % surrounded by 1 infected 
+    Infection_rule_2 = sum(sum(num_infected_neighbours)) == 2; % surrounded by 2 infected 
+    Infection_rule_3 = sum(sum(num_infected_neighbours)) == 3; % surrounded by 3 infected 
+    Infection_rule_4 = sum(sum(num_infected_neighbours)) == 4; % surrounded by 4 infected 
+    Infection_rule_5 = sum(sum(num_infected_neighbours)) == 5; % surrounded by 5 infected 
+    Infection_rule_6 = sum(sum(num_infected_neighbours)) == 6; % surrounded by 6 infected 
+    Infection_rule_7 = sum(sum(num_infected_neighbours)) == 7; % surrounded by 7 infected 
+    Infection_rule_8 = sum(sum(num_infected_neighbours)) == 8; % surrounded by 8 infected 
 
    % Count how many regular neighbours each cell has in its neighbourhood
     breeding_neighbours = C(north, :) + C(south, :) + C(:, east) + C(:, west) ...
                     + C(north, east) + C(north, west) + C(south, east) + C(south, west);
     % Breeding rules
-    Breeding_rule = sum(sum(breeding_neighbours)) >= 1;
-    
+    num_breeding_neighbours = sum(sum(breeding_neighbours == 1));
+    Breeding_rule = ((num_breeding_neighbours >= 1) && (mating_season == 1));
+
+    % Future neighbours
+    straight_dir = [north;south;east;west];
+    upupdowndown = [north;north;south;south;];
+    leftrightleftright = [west;east;west;east];
+
+    future_neighboursless_step = zeros(8,2);
+    for i = 1 : 8
+        if i == 1 || i == 3 || i == 5 || i == 7
+            if B2(straight_dir(i), :) == 0
+                if isequal(straight_dir(i),north)
+                    dx = 0; 
+                    dy = -1;
+                elseif isequal(straight_dir(i),east)
+                    dx = 1;
+                    dy = 0;
+                elseif isequal(straight_dir(i),south)
+                    dx = 0; 
+                    dy = 1;
+                else
+                    dx = -1;
+                    dy = 0;
+                end
+                future_neighboursless_step(i,:) = [dy,dx];
+            else
+                future_neighboursless_step(i,:) = [0,0];
+            end
+        elseif i == 2 || i == 4 || i == 6 || i == 8
+            if B2(upupdowndown(i), leftrightleftright(i)) == 0
+                if isequal(upupdowndown(i),north)
+                    dy = -1; 
+                else
+                    dy = 1;
+                end
+                if isequal(leftrightleftright(i),west)
+                    dx = -1; 
+                else
+                    dx = 1;
+                end
+                future_neighboursless_step(i,:) = [dy,dx];
+            else
+                future_neighboursless_step(i,:) = [0,0];
+            end
+        else
+            message = ('fuckin error');
+            disp(message);
+            return
+        end
+    end
+
     % sets variable based on mating season
     % If it is mating season, var = 1 (cells come together)
     % If it is not mating season, var = -1 (cells avoid each other)
     if mating_season == 1
         var = 1;
-        if Breeding_rule
-            Cub = A(2,2);
-        else 
-            Cub = 0;
-        end
     else
         var = -1;
-        Cub = 0;
     end
 
     % count number of neighbours in all cardinal directions
@@ -128,9 +172,28 @@ function [weighting_x, weighting_y, movement_type_weighting,Infection_weighting,
         elseif Infection_rule_1
             Infection_status = 1;
         else 
-            Infection_status = 0;
+            Infection_status = rand>0.99; % 1% chance to get infection status
         end
         Infection_weighting = Infection_status* 0.12;
     end
-     
+    
+        if Breeding_rule
+                Cub_stat = 1;
+            % if num_breeding_neighbours
+                %mod(num_breeding_neighbours,8) ~= 0 % 8 is max number of neighbours
+                %Breeding_weighting = round(mod(num_breeding_neighbours,8),2)/2;
+            if (num_breeding_neighbours == 2)
+                Breeding_weighting = 0.2;
+            %elseif num_breeding_neighbours == 4
+                %Breeding_weighting = 0.32;
+            %elseif num_breeding_neighbours == 8
+                %Breeding_weighting = 0.1;
+            else
+                Breeding_weighting = 0;
+            end
+        else
+            Breeding_weighting = 0 ;
+            Cub_stat = 0;
+        end
+
 end

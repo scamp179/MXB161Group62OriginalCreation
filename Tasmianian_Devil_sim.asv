@@ -22,79 +22,84 @@ function [positions,population,infect_percentage] = Tasmianian_Devil_sim(N, init
     handle = imshow(positions(:,:,1), 'InitialMagnification', 'Fit');
     colormap(parula)
 
-for dt = 2:N
-    weeks = mod(dt,52);
-    mating_season = (weeks >= 8 && weeks <= 20);
+    for dt = 2:N
+%       Determine if simulation is in mating season. 
+        weeks = mod(dt,52);
+        if weeks >= 8 && weeks <= 20
+            mating_season = 1;
+        else
+            mating_season = 0;
+        end
+        infect_status = positions(:, :, dt-1);
+        for i = 1:K
+            for j = 1:M
+%               Check Boundary Conditions for input into cellular autonoma                
+                if positions(i,j,dt-1) ~= 0
+                    A = Boundary_Conditions(positions,i,j,K,M,dt-1);
+                    A2 = Boundary_Conditions(positions,i,j,K,M,dt);
+%                   Use cellular autonoma to determine weightings for
+%                   random walk.
+                    [weighting_x, weighting_y, movement_type_weighting,infect_weight,cub_status,breeding_weighting,backup_step] = Cellular_autonomy_direction(A,A2,mating_season);
+%                   Perform Random  Walk for single Tasmanian Devil.                    
+                    [dx,dy] = Random_walk_two_dim(positions(:, :, dt-1), j, i, weighting_x, weighting_y, movement_type_weighting);
 
-    infect_status = positions(:,:,dt-1);
-    new_positions = zeros(K,M);  % Create a fresh layer for this timestep
-
-    for i = 1:K
-        for j = 1:M
-            if positions(i,j,dt-1) >= 1
-                A = Boundary_Conditions(positions,i,j,K,M,dt-1);
-                A2 = Boundary_Conditions(positions,i,j,K,M,dt);
-                [weighting_x, weighting_y, movement_type_weighting, infect_weight, cub_status, breeding_weighting, backup_step] = Cellular_autonomy_direction(A, A2, mating_season);
-
-                [dx, dy] = Random_walk_two_dim(positions(:,:,dt-1), j, i, weighting_x, weighting_y, movement_type_weighting);
-                new_i = i + dy;
-                new_j = j + dx;
-
-                % Check bounds
-                if new_i < 1 || new_i > K || new_j < 1 || new_j > M || new_positions(new_i, new_j) >= 1
-                    % Try backup directions
-                    moved = false;
-                    for f = 1:8
-                        dy_try = backup_step(f,1);
-                        dx_try = backup_step(f,2);
-                        ni = i + dy_try;
-                        nj = j + dx_try;
-                        if ni >= 1 && ni <= K && nj >= 1 && nj <= M && new_positions(ni, nj) == 0
-                            new_i = ni;
-                            new_j = nj;
-                            moved = true;
-                            break;
+%                   Cannot move to cell if already occupied
+                    if positions(i + dy, j + dx, dt) >= 1 
+                        for f = 1 : 8
+                            if ~isequal(backup_step(f,:),[0,0])
+                                if (i + dy) <= K || (i + dy) >= 1
+                                dy = backup_step(f,1);
+                                end
+                                if (j + dx) <= M || (j + dx) >= 1
+                                dx = backup_step(f,2);
+                                end
+                            end
                         end
+                       positions(i + dy, j + dx, dt) = update_infection_status(infect_status(i,j),infect_weight);
+                    else
+                        positions(i + dy, j + dx, dt) = update_infection_status(infect_status(i,j),infect_weight);
                     end
-                    if ~moved
-                        % Stay in place
-                        new_i = i;
-                        new_j = j;
-                    end
-                end
-
-                new_positions(new_i, new_j) = update_infection_status(infect_status(i,j), infect_weight);
-
-                 % Breeding logic
-                   if cub_status == 1
-                    [B,y,x] = Boundary_Conditions(positions,new_i,new_j,K,M,dt);
-                   for r = 1:length(y)
-                        for c = 1:length(x)
-                            row = y(r);
-                            col = x(c);
-                            if new_positions(row, col) == 0
-                                new_positions(row, col) = breeding_outcome(cub_status, breeding_weighting);
-                           end
+%                   Update position and infection status of Tasmainian 
+%                   Devil for not time iteration.
+                    %positions(i + dy, j + dx, dt) = update_infection_status(infect_status(i,j),infect_weight);
+                    
+                    if cub_status == 1  
+                        I = i + dy;
+                        J = j + dx;
+                        [B,y,x] = Boundary_Conditions(positions,I,J,K,M,dt);
+                        R = length(y);
+                        C = length(x);
+                        for r = 1 : R
+                            for c = 1 : C
+                                if B(r,c) == 0
+                                    row = y(r);
+                                    col = x(c);
+                                    positions(row, col , dt) = breeding_outcome(cub_status,breeding_weighting);
+                                end
+                            end
                         end
-                    end
+                    end 
+
+                else
+                    positions(i,j,dt) = positions(i,j,dt-1);
                 end
             end
         end
-    end
-
-    % Assign updated layer
-    positions(:,:,dt) = new_positions;
-    handle.CData = new_positions;
+        drawnow;
+        Simulation_frames = getframe(fig);
+        writeVideo(Simulation_vid, Simulation_frames);
+        handle.CData = positions(:,:,dt);
+%       Calculate and Record population data
+        population(dt) = sum(sum(positions(:,:,dt) >= 1));
+        infect_percentage(dt) = sum(sum(positions(:,:,dt) > 1))/population(dt);
+     end
+    
     drawnow;
-    writeVideo(Simulation_vid, getframe(fig));
-
-    % Logging
-    population(dt) = sum(new_positions(:) >= 1);
-    infect_percentage(dt) = sum(new_positions(:) > 1) / max(1, population(dt));
-    fprintf("Week %d - Living: %d, Infected: %.2f%%\n", dt, population(dt), 100*infect_percentage(dt));
+    Simulation_frames = getframe(fig);
+    writeVideo(Simulation_vid, Simulation_frames);
+    close(Simulation_vid);
 end
 
-end
 
 % -------------------------------------------------------------------------
 
