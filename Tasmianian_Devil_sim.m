@@ -1,8 +1,15 @@
 function [positions,population,infect_percentage] = Tasmianian_Devil_sim(N, init_pos)
 %       The Random_walk_cell_sim function uses a random walk given the 
-%       inputs to derive and output the position of M nutrient cells for
-%       N iterations. This function also outputs a tracking array which
-%       shows the amount of nutrient cells inside the cell Membrane. 
+%       inputs to derive and output the position of the Tasmanian Devil cells for
+%       N iterations. 
+%       init_pos is the array of the area where positive values are
+%       tasmanian devils
+%
+%       Outputs:
+%       positions - array of area where positive values represent Tasmanian
+%       Devils
+%       population - current population
+%       infect_percentage - percentage of population that is infected
     
 %   Initialise variables
     Simulation_vid = VideoWriter('Simulation_vid');
